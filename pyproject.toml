@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dialektika"
+version = "0.0.1"
+dependencies = [
+    "fastapi", #pinalit yung flask
+    "sqlalchemy[asyncio]", #pinalit yung peewee
+    "openpyxl",
+    "asyncpg",
+    "dotenv",
+    "psycopg2-binary",
+    "uvicorn[standard]",
+    "pwdlib[argon2]",
+    "pyjwt",
+    "python-multipart",
+    "requests",
+    "python-dateutil"
+]
+
+[tool.setuptools]
+py-modules = ["main"]
+packages = {find={where= ["src"]}}
