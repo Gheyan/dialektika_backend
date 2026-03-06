@@ -82,11 +82,7 @@ target/
 profile_default/
 ipython_config.py
 
-# Ignore all files in uploads/
-uploads/*
 
-# But don’t ignore the folder itself
-!uploads/.gitkeep
 
 # pyenv
 #   For a library or package, you might want to ignore these files since the code is
