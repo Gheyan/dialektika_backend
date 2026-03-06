@@ -28,30 +28,29 @@ async def soft_delete_user(current_user: User, user_id: int):
 
     return {"message": f"User {user_to_delete.username} is moved to the recycle bin."}
 
-
-async def delete_user(current_user: User, user_id: int, ):
-    async with AsyncSessionLocal() as db:
-        if current_user.role != 'admin':
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admins can delete users")
+# async def delete_user(current_user: User, user_id: int, ):
+#     async with AsyncSessionLocal() as db:
+#         if current_user.role != 'admin':
+#             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admins can delete users")
         
-        user_query = select(User).where(User.id == user_id)
-        user_result = await db.execute(user_query)    
-        user_to_delete = user_result.scalar_one_or_none()
+#         user_query = select(User).where(User.id == user_id)
+#         user_result = await db.execute(user_query)    
+#         user_to_delete = user_result.scalar_one_or_none()
 
-        current_user_query = select(User).where(current_user.email == User.email)
-        current_user_result = await db.execute(current_user_query)    
-        current_person = current_user_result.scalar_one_or_none()
+#         current_user_query = select(User).where(current_user.email == User.email)
+#         current_user_result = await db.execute(current_user_query)    
+#         current_person = current_user_result.scalar_one_or_none()
 
-        if not user_to_delete:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User does not exist")
+#         if not user_to_delete:
+#             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User does not exist")
         
-        if user_to_delete.is_deleted is False:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User is not in the recycle bin!")
+#         if user_to_delete.is_deleted is False:
+#             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User is not in the recycle bin!")
 
-        await db.delete(user_to_delete)
-        await db.commit()
+#         await db.delete(user_to_delete)
+#         await db.commit()
 
-    return {"message": f"User {user_to_delete.username} successfully deleted."}
+#     return {"message": f"User {user_to_delete.username} successfully deleted."}
 
 async def get_all_user(current_user:User):
     async with AsyncSessionLocal() as db:
@@ -65,7 +64,7 @@ async def get_all_user(current_user:User):
         
     return all_users
 
-async def edit_user(current_user: User, user_id: int, email: str=None, role: str=None, username: str=None, password: str=None):
+async def edit_user(current_user: User, user_id: int, email: str=None, role: str=None,firstname: str=None, lastname: str=None, username: str=None, password: str=None):
      async with AsyncSessionLocal() as db:
         if current_user.role != 'admin':
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admins can load users")
@@ -93,12 +92,17 @@ async def edit_user(current_user: User, user_id: int, email: str=None, role: str
 
         if not user_to_edit:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User does not exist")
+        
+        if firstname:
+            user_to_edit.firstname = firstname.lower()
+        if lastname:
+            user_to_edit.lastname = lastname.lower()
         if email:
-            user_to_edit.email = email
+            user_to_edit.email = email.lower()
         if role:
-            user_to_edit.role = role
+            user_to_edit.role = role.lower()
         if username:
-            user_to_edit.username = username
+            user_to_edit.username = "@" + username.lower()
         if password:
             user_to_edit.hash = get_password_hash(password)
 
@@ -106,7 +110,7 @@ async def edit_user(current_user: User, user_id: int, email: str=None, role: str
        
         await db.commit()
         
-async def add_user(current_user: User, email: str, role: str, username: str, password: str):
+async def add_user(current_user: User, email: str, role: str, username: str, firstname: str, lastname: str, password: str):
      async with AsyncSessionLocal() as db:
         if current_user.role != 'admin':
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admins can load users")   
@@ -128,6 +132,6 @@ async def add_user(current_user: User, email: str, role: str, username: str, pas
         if username_scalar:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already exists")
         
-        new_user = User(email=email,role=role, username=username, hash=get_password_hash(password))
+        new_user = User(email=email.lower(),role=role.lower(), username= "@" + username.lower(), firstname=firstname.lower(), lastname=lastname.lower(), hash=get_password_hash(password))
         db.add(new_user)
         await db.commit()

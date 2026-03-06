@@ -10,7 +10,7 @@ from auth.public_user import PublicUser
 
 from datetime import timedelta, datetime
 
-from manage_user import delete_user, get_all_user, edit_user, add_user
+from manage_user import get_all_user, edit_user, add_user, soft_delete_user
 
 router = APIRouter(prefix="/rest")
 
@@ -72,10 +72,10 @@ async def get_public_user(current_user: user_dependency):
 #######################MANAGEUSER####################
 
 
-@router.delete("/deleteuser", tags=["User Management"])
-async def delete_user_role(current_user: user_dependency,user_id:int=None):
-    remove_user = await delete_user(current_user,user_id)
-    return remove_user
+# @router.delete("/deleteuser", tags=["User Management"])
+# async def delete_user_role(current_user: user_dependency,user_id:int=None):
+#     remove_user = await delete_user(current_user,user_id)
+#     return remove_user
 
 @router.get("/loadusers", tags=["User Management"])
 async def load_all_users(current_user: user_dependency):
@@ -83,11 +83,16 @@ async def load_all_users(current_user: user_dependency):
     return load_user
 
 @router.put("/edituser", tags=["User Management"])
-async def edit_user_info(current_user: user_dependency, user_id: int, email: str=None, role: str=None, username: str=None, password: str=None):
-    edit_users = await edit_user(current_user, user_id, email, role, username, password)
+async def edit_user_info(current_user: user_dependency, user_id: int, email: str=None, role: str=None, firstname: str=None, lastname: str=None, username: str=None, password: str=None):
+    edit_users = await edit_user(current_user, user_id, email, role, firstname, lastname, username, password)
     return edit_user
 
+@router.put("/softdelete", tags=["User Management"])
+async def soft_delete_user_info(current_user: user_dependency, user_id:int):
+    soft_delete = await soft_delete_user(current_user, user_id)
+    return soft_delete
+
 @router.post("/adduser", tags=["User Management"])
-async def add_user_instance(current_user: user_dependency, email: str, role: str, username: str, password: str):
-    added_user = await add_user(current_user, email, role, username, password)
+async def add_user_instance(current_user: user_dependency, email: str, role: str, username: str, firstname: str, lastname:str, password: str):
+    added_user = await add_user(current_user, email, role, username, firstname, lastname, password)
     return added_user
