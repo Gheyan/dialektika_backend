@@ -1,1 +1,1 @@
-from .postContent import get_all_post, get_specific_user_post, create_post
+from .postContent import get_all_post, get_specific_user_post, create_post, edit_post, delete_post

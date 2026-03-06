@@ -11,7 +11,7 @@ from auth.public_user import PublicUser
 from datetime import timedelta, datetime
 
 from manage_user import get_all_user, edit_user, add_user, delete_user
-from post_content import get_all_post, get_specific_user_post, create_post
+from post_content import get_all_post, get_specific_user_post, create_post, edit_post, delete_post
 
 router = APIRouter(prefix="/rest")
 
@@ -113,3 +113,12 @@ async def get_all_user__specific_post(current_user: user_dependency, user_id:int
 @router.post("/posts", tags=["Post"])
 async def create_new_post(current_user: user_dependency,storage: StorageDep,title: str = Form(...),description: str | None = Form(None),file: UploadFile | None = File(None)):
     return await create_post(current_user=current_user,title=title,description=description,file=file,storage=storage)
+
+@router.put("/posts/{post_id}", tags=["Post"])
+async def update_post_route(current_user: user_dependency, storage: StorageDep, post_id: int,title: str | None = None,description: str | None = None,file: UploadFile | None = None):
+    return await edit_post(post_id, current_user, title, description, file, storage)
+
+
+@router.delete("/posts/{post_id}", tags=["Post"])
+async def delete_post_route(current_user: user_dependency, post_id: int):
+    return await delete_post(post_id, current_user)
