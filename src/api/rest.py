@@ -11,7 +11,7 @@ from auth.public_user import PublicUser
 from datetime import timedelta, datetime
 
 from manage_user import get_all_user, edit_user, add_user, delete_user
-from post_content import get_all_post
+from post_content import get_all_post, get_specific_user_post
 router = APIRouter(prefix="/rest")
 
 user_dependency = Annotated[PublicUser, Depends(login.get_current_active_user)]
@@ -103,3 +103,8 @@ async def add_user_instance(current_user: user_dependency, email: str, role: str
 async def get_all_user_post(current_user: user_dependency, rows:int, offset:int):
     all_user_post = await get_all_post(current_user, rows, offset)
     return all_user_post
+
+@router.get("/getspecificposts", tags=["Post"])
+async def get_all_user__specific_post(current_user: user_dependency, user_id:int):
+    all_user_specific_post = await get_specific_user_post(current_user, user_id)
+    return all_user_specific_post
