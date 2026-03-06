@@ -11,7 +11,7 @@ from auth.public_user import PublicUser
 from datetime import timedelta, datetime
 
 from manage_user import get_all_user, edit_user, add_user, delete_user
-
+from post_content import get_all_post
 router = APIRouter(prefix="/rest")
 
 user_dependency = Annotated[PublicUser, Depends(login.get_current_active_user)]
@@ -87,12 +87,19 @@ async def edit_user_info(current_user: user_dependency, user_id: int, email: str
     edit_users = await edit_user(current_user, user_id, email, role, firstname, lastname, username, password)
     return edit_user
 
-@router.put("/softdelete", tags=["User Management"])
-async def soft_delete_user_info(current_user: user_dependency, user_id:int):
-    soft_delete = await soft_delete_user(current_user, user_id)
-    return soft_delete
+# @router.put("/softdelete", tags=["User Management"])
+# async def soft_delete_user_info(current_user: user_dependency, user_id:int):
+#     soft_delete = await soft_delete_user(current_user, user_id)
+#     return soft_delete
 
 @router.post("/adduser", tags=["User Management"])
 async def add_user_instance(current_user: user_dependency, email: str, role: str, username: str, firstname: str, lastname:str, password: str):
     added_user = await add_user(current_user, email, role, username, firstname, lastname, password)
     return added_user
+
+
+####################     [POSTS]     ####################
+@router.get("/getposts", tags=["Post"])
+async def get_all_user_post(current_user: user_dependency, rows:int, offset:int):
+    all_user_post = await get_all_post(current_user, rows, offset)
+    return all_user_post

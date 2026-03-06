@@ -23,7 +23,7 @@ class User(Base):
     email: Mapped[str]
     hash: Mapped[str]
     role: Mapped[str]
-    is_deleted: Mapped[bool] = mapped_column(nullable=True, server_default="False")
+    #is_deleted: Mapped[bool] = mapped_column(nullable=True, server_default="False")
 
 class Post(Base):
     __tablename__ = "Post"
@@ -32,13 +32,14 @@ class Post(Base):
     title: Mapped[str]
     description: Mapped[str] = mapped_column(nullable=True)
     attachment: Mapped[str] = mapped_column(nullable=True)
+    date_created: Mapped[datetime.date] = mapped_column(server_default=func.current_date()) 
 
 class Comments(Base):
     __tablename__ = "Comments"
     post_id: Mapped[int] = mapped_column(ForeignKey("Post.id", ondelete="CASCADE"), primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("User.id", ondelete="CASCADE"), primary_key=True)
     comment: Mapped[str]
-    date_created: Mapped[str]
+    date_created: Mapped[datetime.date] = mapped_column(server_default=func.current_date())
 
 
     

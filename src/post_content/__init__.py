@@ -1,0 +1,1 @@
+from .postContent import get_all_post
