@@ -1,1 +1,1 @@
-from .comments import post_comment, edit_comment,delete_comment
+from .comments import post_comment, edit_comment,delete_comment, get_comments_per_post

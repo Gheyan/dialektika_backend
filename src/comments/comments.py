@@ -70,3 +70,33 @@ async def delete_comment(current_user: User, comment_id: int):
         await db.commit()
 
         return {"message": "Comment deleted successfully"}
+    
+async def get_comments_per_post(post_id: int):
+    async with AsyncSessionLocal() as db:
+        post_query = select(Post).where(Post.id == post_id)
+        post_result = (await db.execute(post_query)).scalar_one_or_none()
+
+        if post_result is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Post not found")
+
+        comments_query = (
+            select(Comments.id,Comments.post_id,Comments.user_id,Comments.comment,Comments.date_created,User.username,User.firstname,User.lastname)
+            .join(User, User.id == Comments.user_id)
+            .where(Comments.post_id == post_id)
+            .order_by(Comments.date_created.desc(), Comments.id.desc())
+        )
+        comments_result = (await db.execute(comments_query)).all()
+
+        return [
+            {
+                "id": row.id,
+                "post_id": row.post_id,
+                "user_id": row.user_id,
+                "username": row.username,
+                "firstname": row.firstname,
+                "lastname": row.lastname,
+                "comment": row.comment,
+                "date_created": row.date_created
+            }
+            for row in comments_result
+        ]

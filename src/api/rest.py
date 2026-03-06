@@ -10,7 +10,7 @@ from auth.public_user import PublicUser
 
 from datetime import timedelta, datetime
 
-from comments import post_comment, edit_comment, delete_comment
+from comments import post_comment, edit_comment, delete_comment, get_comments_per_post
 from manage_user import get_all_user, edit_user, add_user, delete_user
 from post_content import get_all_post, get_specific_user_post, create_post, edit_post, delete_post
 
@@ -136,3 +136,7 @@ async def edit_new_comment(current_user: user_dependency, post_id: int, comment:
 @router.delete("/deletecomment", tags=["Comments"])
 async def delete_new_comment(current_user: user_dependency, comment_id:int):
     return await delete_comment(current_user, comment_id)
+
+@router.get("/posts/{post_id}/comments",tags=["Comments"])
+async def fetch_comments(post_id: int):
+    return await get_comments_per_post(post_id)
