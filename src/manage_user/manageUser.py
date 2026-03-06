@@ -37,15 +37,15 @@ async def delete_user(current_user: User, user_id: int, ):
         user_result = await db.execute(user_query)    
         user_to_delete = user_result.scalar_one_or_none()
 
-        current_user_query = select(User).where(current_user.email == User.email)
-        current_user_result = await db.execute(current_user_query)    
-        current_person = current_user_result.scalar_one_or_none()
+        # current_user_query = select(User).where(current_user.email == User.email)
+        # current_user_result = await db.execute(current_user_query)    
+        # current_person = current_user_result.scalar_one_or_none()
 
         if not user_to_delete:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User does not exist")
         
         # if user_to_delete.is_deleted is False:
-        #     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User is not in the recycle bin!")
+        # raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User is not in the recycle bin!")
 
         await db.delete(user_to_delete)
         await db.commit()
@@ -69,10 +69,9 @@ async def edit_user(current_user: User, user_id: int, email: str=None, role: str
         if current_user.role != 'admin':
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admins can load users")
 
-        current_user_query = select(User).where(current_user.email == User.email)
-        current_user_result = await db.execute(current_user_query)    
-        current_person = current_user_result.scalar_one_or_none()
-
+        # current_user_query = select(User).where(current_user.email == User.email)
+        # current_user_result = await db.execute(current_user_query)    
+        # current_person = current_user_result.scalar_one_or_none()
 
         edit_query = select(User).where(User.id == user_id)
         edit_result = await db.execute(edit_query)
@@ -115,9 +114,9 @@ async def add_user(current_user: User, email: str, role: str, username: str, fir
         if current_user.role != 'admin':
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admins can load users")   
 
-        current_user_query = select(User).where(current_user.email == User.email)
-        current_user_result = await db.execute(current_user_query)    
-        current_person = current_user_result.scalar_one_or_none()
+        # current_user_query = select(User).where(current_user.email == User.email)
+        # current_user_result = await db.execute(current_user_query)    
+        # current_person = current_user_result.scalar_one_or_none()
 
         check_username_query = select(User).where(User.username == username)
         check_username_result = await db.execute(check_username_query)

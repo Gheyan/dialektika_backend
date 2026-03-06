@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import StreamingResponse
 
 from typing import Annotated, Optional, List
-
+from storage.storage_type import StorageDep
 from auth import login
 from auth.token import Token, RefreshRequest
 from auth.public_user import PublicUser
@@ -12,6 +12,7 @@ from datetime import timedelta, datetime
 
 from manage_user import get_all_user, edit_user, add_user, delete_user
 from post_content import get_all_post, get_specific_user_post
+from storage import upload_attachment_to_post, delete_attachment_from_post
 router = APIRouter(prefix="/rest")
 
 user_dependency = Annotated[PublicUser, Depends(login.get_current_active_user)]
@@ -108,3 +109,15 @@ async def get_all_user_post(current_user: user_dependency, rows:int, offset:int)
 async def get_all_user__specific_post(current_user: user_dependency, user_id:int):
     all_user_specific_post = await get_specific_user_post(current_user, user_id)
     return all_user_specific_post
+
+####################     [STORAGE]     ####################
+@router.post("/uploadattachment", tags=["Attachment"])
+async def upload_attachment(current_user: user_dependency,post_id: int,storage: StorageDep,
+file: UploadFile = File(...)):
+    upload_post_attachment_result = await upload_attachment_to_post(current_user,file,post_id,storage)
+    return upload_post_attachment_result
+
+@router.delete("/posts/{post_id}/attachment", tags=["Attachment"])
+async def delete_attachment(current_user: user_dependency,post_id: int,storage: StorageDep):
+    result = await delete_attachment_from_post(current_user,post_id,storage)
+    return result
