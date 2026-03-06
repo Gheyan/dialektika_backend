@@ -71,25 +71,16 @@ async def edit_post(
         user_id = (await db.execute(current_user_query)).scalar_one_or_none()
 
         if user_id is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="User not found")
 
         post_query = select(Post).where(Post.id == post_id)
         post = (await db.execute(post_query)).scalar_one_or_none()
 
         if post is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Post not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Post not found")
 
         if post.user_id != user_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You are not allowed to edit this post"
-            )
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="You are not allowed to edit this post")
 
         if title is not None:
             post.title = title
@@ -104,10 +95,7 @@ async def edit_post(
                 attachment_url = f"{ATTACHMENT_URL}/{unique_filename}"
                 post.attachment = attachment_url
             except Exception as e:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"Upload failed: {str(e)}"
-                )
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,detail=f"Upload failed: {str(e)}")
 
         await db.commit()
         await db.refresh(post)
@@ -120,25 +108,16 @@ async def delete_post(post_id: int, current_user: User):
         user_id = (await db.execute(current_user_query)).scalar_one_or_none()
 
         if user_id is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="User not found")
 
         post_query = select(Post).where(Post.id == post_id)
         post = (await db.execute(post_query)).scalar_one_or_none()
 
         if post is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Post not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Post not found")
 
         if post.user_id != user_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You are not allowed to delete this post"
-            )
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="You are not allowed to delete this post")
 
         await db.delete(post)
         await db.commit()

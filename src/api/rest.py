@@ -10,6 +10,7 @@ from auth.public_user import PublicUser
 
 from datetime import timedelta, datetime
 
+from comments import post_comment, edit_comment, delete_comment
 from manage_user import get_all_user, edit_user, add_user, delete_user
 from post_content import get_all_post, get_specific_user_post, create_post, edit_post, delete_post
 
@@ -122,3 +123,16 @@ async def update_post_route(current_user: user_dependency, storage: StorageDep, 
 @router.delete("/posts/{post_id}", tags=["Post"])
 async def delete_post_route(current_user: user_dependency, post_id: int):
     return await delete_post(post_id, current_user)
+
+####################     [COMMENTS]     ####################
+@router.post("/postcomment", tags=["Comments"])
+async def post_new_comment(current_user: user_dependency, post_id: int, comment: str):
+    return await post_comment(current_user, post_id,comment)
+
+@router.put("/editcomment", tags=["Comments"])
+async def edit_new_comment(current_user: user_dependency, post_id: int, comment: str):
+    return await edit_comment(current_user, post_id,comment)
+
+@router.delete("/deletecomment", tags=["Comments"])
+async def delete_new_comment(current_user: user_dependency, comment_id:int):
+    return await delete_comment(current_user, comment_id)

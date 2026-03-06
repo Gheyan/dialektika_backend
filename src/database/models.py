@@ -36,8 +36,9 @@ class Post(Base):
 
 class Comments(Base):
     __tablename__ = "Comments"
-    post_id: Mapped[int] = mapped_column(ForeignKey("Post.id", ondelete="CASCADE"), primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("User.id", ondelete="CASCADE"), primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    post_id: Mapped[int] = mapped_column(ForeignKey("Post.id", ondelete="CASCADE"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("User.id", ondelete="CASCADE"))
     comment: Mapped[str]
     date_created: Mapped[datetime.date] = mapped_column(server_default=func.current_date())
 
