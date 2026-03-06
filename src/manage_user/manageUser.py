@@ -4,31 +4,7 @@ from database.models import User
 from database.database import AsyncSessionLocal
 from auth.login import get_password_hash
 
-async def soft_delete_user(current_user: User, user_id: int):
-    async with AsyncSessionLocal() as db:
-        if current_user.role != 'admin':
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admins can delete users")
-        
-        user_query = select(User).where(User.id == user_id)
-        user_result = await db.execute(user_query)    
-        user_to_delete = user_result.scalar_one_or_none()
-
-        current_user_query = select(User).where(current_user.email == User.email)
-        current_user_result = await db.execute(current_user_query)    
-        current_person = current_user_result.scalar_one_or_none()
-
-        if not user_to_delete:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User does not exist")
-        
-        if user_to_delete.is_deleted is True:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User is already in recycle bin!")
-        
-        user_to_delete.is_deleted=True
-        await db.commit()
-
-    return {"message": f"User {user_to_delete.username} is moved to the recycle bin."}
-
-# async def delete_user(current_user: User, user_id: int, ):
+# async def soft_delete_user(current_user: User, user_id: int):
 #     async with AsyncSessionLocal() as db:
 #         if current_user.role != 'admin':
 #             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admins can delete users")
@@ -44,20 +20,44 @@ async def soft_delete_user(current_user: User, user_id: int):
 #         if not user_to_delete:
 #             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User does not exist")
         
-#         if user_to_delete.is_deleted is False:
-#             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User is not in the recycle bin!")
-
-#         await db.delete(user_to_delete)
+#         if user_to_delete.is_deleted is True:
+#             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User is already in recycle bin!")
+        
+#         user_to_delete.is_deleted=True
 #         await db.commit()
 
-#     return {"message": f"User {user_to_delete.username} successfully deleted."}
+#     return {"message": f"User {user_to_delete.username} is moved to the recycle bin."}
+
+async def delete_user(current_user: User, user_id: int, ):
+    async with AsyncSessionLocal() as db:
+        if current_user.role != 'admin':
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admins can delete users")
+        
+        user_query = select(User).where(User.id == user_id)
+        user_result = await db.execute(user_query)    
+        user_to_delete = user_result.scalar_one_or_none()
+
+        current_user_query = select(User).where(current_user.email == User.email)
+        current_user_result = await db.execute(current_user_query)    
+        current_person = current_user_result.scalar_one_or_none()
+
+        if not user_to_delete:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User does not exist")
+        
+        # if user_to_delete.is_deleted is False:
+        #     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User is not in the recycle bin!")
+
+        await db.delete(user_to_delete)
+        await db.commit()
+
+    return {"message": f"User {user_to_delete.username} successfully deleted."}
 
 async def get_all_user(current_user:User):
     async with AsyncSessionLocal() as db:
         if current_user.role != 'admin':
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admins can load users")
         
-        alluser_query = select(User).where(User.is_deleted==False)
+        alluser_query = select(User)#.where(User.is_deleted==False)
 
         alluser_result = await db.execute(alluser_query)
         all_users = alluser_result.scalars().all()

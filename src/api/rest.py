@@ -10,7 +10,7 @@ from auth.public_user import PublicUser
 
 from datetime import timedelta, datetime
 
-from manage_user import get_all_user, edit_user, add_user, soft_delete_user
+from manage_user import get_all_user, edit_user, add_user, delete_user
 
 router = APIRouter(prefix="/rest")
 
@@ -72,10 +72,10 @@ async def get_public_user(current_user: user_dependency):
 #######################MANAGEUSER####################
 
 
-# @router.delete("/deleteuser", tags=["User Management"])
-# async def delete_user_role(current_user: user_dependency,user_id:int=None):
-#     remove_user = await delete_user(current_user,user_id)
-#     return remove_user
+@router.delete("/deleteuser", tags=["User Management"])
+async def delete_user_role(current_user: user_dependency,user_id:int=None):
+    remove_user = await delete_user(current_user,user_id)
+    return remove_user
 
 @router.get("/loadusers", tags=["User Management"])
 async def load_all_users(current_user: user_dependency):
