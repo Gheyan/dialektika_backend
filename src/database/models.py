@@ -14,24 +14,6 @@ from sqlalchemy import Numeric, String
 class Base(AsyncAttrs, DeclarativeBase):
     pass
 
-class Task(Base):
-    __tablename__ = "Task"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    title: Mapped[str]
-    description: Mapped[str] = mapped_column(nullable=True)
-    priority: Mapped[str]
-    status: Mapped[str]
-    postDate: Mapped[datetime.datetime]
-    deadlineDate: Mapped[datetime.datetime]
-    completionDate: Mapped[datetime.datetime] = mapped_column(nullable=True)
-
-    assignees: Mapped[List["TaskAssignee"]] = relationship(
-        back_populates="task", cascade="all, delete-orphan", passive_deletes=True
-    )
-    attachments: Mapped[List["TaskAttachment"]] = relationship(
-        back_populates="task", cascade="all, delete-orphan", passive_deletes=True
-    )
-
 class User(Base):
     __tablename__ = "User"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -44,6 +26,7 @@ class User(Base):
     is_deleted: Mapped[bool] = mapped_column(nullable=True, server_default="False")
 
 class Post(Base):
+    __tablename__ = "Post"
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("User.id", ondelete="CASCADE"))
     title: Mapped[str]
@@ -51,6 +34,7 @@ class Post(Base):
     attachment: Mapped[str] = mapped_column(nullable=True)
 
 class Comments(Base):
+    __tablename__ = "Comments"
     post_id: Mapped[int] = mapped_column(ForeignKey("Post.id", ondelete="CASCADE"), primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("User.id", ondelete="CASCADE"), primary_key=True)
     comment: Mapped[str]
