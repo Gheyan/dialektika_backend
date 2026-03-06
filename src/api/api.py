@@ -15,7 +15,7 @@ async def lifespan(app: FastAPI):
 
 
 def get_app() -> FastAPI:
-    app = FastAPI(title="Cataloging Task Manager API", lifespan=lifespan)
+    app = FastAPI(title="Dialektika Webapp", lifespan=lifespan)
     app.include_router(rest.router)
     app.add_middleware(
         CORSMiddleware,
