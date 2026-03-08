@@ -48,13 +48,13 @@ async def login_access_token(
 
 @router.post("/refresh", tags=["Authentication"])
 async def refresh_access_token(body: RefreshRequest):
-    username = login.verify_refresh_token(RefreshRequest.refresh_token)
+    username = await login.verify_refresh_token(body.refresh_token)
 
     user = await login.get_user(username)
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
 
-    new_access_token = login.create_access_token(
+    new_access_token = login.create_token(
         data={"sub": user.username, "type": "access"},
         expires_delta=timedelta(minutes=login.ACCESS_TOKEN_EXPIRE_MINUTES)
     )
@@ -64,6 +64,7 @@ async def refresh_access_token(body: RefreshRequest):
         refresh_token=body.refresh_token,
         token_type="bearer"
     )
+
 
 @router.get("/user", tags=["Authentication"])
 async def get_public_user(current_user: user_dependency):
