@@ -1,18 +1,20 @@
 import os
 from abc import ABC, abstractmethod
-from fastapi import Depends, FastAPI
-from fastapi.staticfiles import StaticFiles
 from typing import Annotated
 from dotenv import load_dotenv
+from fastapi import Depends, HTTPException
+import magic
+from supabase import create_client
+import uuid
+
 
 load_dotenv()
 
-# Initialize FastAPI app and static file serving
-app = FastAPI()
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+SUPABASE_BUCKET = os.getenv("SUPABASE_BUCKET", "uploads") 
 
-# Mount the "uploads" directory to serve as static files under "/media"
-app.mount("/media", StaticFiles(directory="uploads"), name="media")
-
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 class StorageProvider(ABC):
     @abstractmethod
@@ -27,40 +29,47 @@ class StorageProvider(ABC):
     async def delete(self, filename: str):
         pass
 
-
-class LocalStorage(StorageProvider):
-
-    def __init__(self, upload_dir="uploads"):
-        self.upload_dir = upload_dir
-        os.makedirs(upload_dir, exist_ok=True)
+class SupabaseStorage(StorageProvider):
+    def __init__(self):
+        self.supabase = supabase  
 
     async def upload(self, file, filename: str) -> str:
-        path = os.path.join(self.upload_dir, filename)
+        unique_filename = f"{uuid.uuid4()}_{filename}"
 
-        with open(path, "wb") as buffer:
-            buffer.write(await file.read())
+        try:
+            file_content = await file.read()
 
-        return filename
+            mime = magic.Magic(mime=True)
+            mime_type = mime.from_buffer(file_content)
+
+            response = self.supabase.storage.from_(SUPABASE_BUCKET).upload(
+                unique_filename, 
+                file_content,  
+                {"content-type": mime_type}  
+            )
+
+            if hasattr(response, 'path') and response.path:
+                file_url = f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_BUCKET}/{response.path}"
+                return file_url
+            else:
+                raise HTTPException(status_code=500, detail="Upload failed: No valid response path")
+
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
     def get_url(self, path: str) -> str:
-        # Use ATTACHMENT_URL from environment variable, fallback to default if not set
-        attachment_url = os.getenv("ATTACHMENT_URL", "https://dialektika-backend.onrender.com/media")
-        return f"{attachment_url}/{path}"
+        return f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_BUCKET}/{path}"
 
     async def delete(self, filename: str):
-        path = os.path.join(self.upload_dir, filename)
+        try:
+            response = self.supabase.storage.from_(SUPABASE_BUCKET).remove([filename])
+            if hasattr(response, 'status_code') and response.status_code != 200:
+                raise HTTPException(status_code=500, detail=f"Delete failed: {response.error_message}")
 
-        if os.path.exists(path):
-            os.remove(path)
-
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Delete failed: {str(e)}")
 
 def get_storage() -> StorageProvider:
-    # Get storage type from environment variable, default to LOCAL
-    storage_type = os.getenv("STORAGE_TYPE", "LOCAL")
-
-    if storage_type == "LOCAL":
-        return LocalStorage()
-    
-    return LocalStorage()
+    return SupabaseStorage()  
 
 StorageDep = Annotated[StorageProvider, Depends(get_storage)]

@@ -3,7 +3,7 @@ from fastapi import HTTPException, status, UploadFile
 from sqlalchemy import select
 from database.database import AsyncSessionLocal
 from database.models import Post, User
-from storage.storage_type import StorageDep
+from storage.storage_type import SUPABASE_BUCKET, SUPABASE_URL, StorageDep
 from config import ATTACHMENT_URL
 
 async def get_all_post(current_user:User, rows:int, offset:int):
@@ -31,7 +31,7 @@ async def get_specific_user_post(current_user:User, user_id:int):
 
     return all_post
 
-async def create_post(current_user: User,title: str,description: str | None = None,file: UploadFile | None = None,storage: StorageDep = None):
+async def create_post(current_user: User, title: str, description: str | None = None, file: UploadFile | None = None, storage: StorageDep = None):
     attachment_url = None
 
     async with AsyncSessionLocal() as db:
@@ -39,17 +39,24 @@ async def create_post(current_user: User,title: str,description: str | None = No
         result = (await db.execute(current_user_query)).scalar_one_or_none()
 
         if result is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="User not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
         if file:
             try:
                 unique_filename = f"{uuid.uuid4()}_{file.filename}"
-                await storage.upload(file, unique_filename)
-                attachment_url = f"{ATTACHMENT_URL}/{unique_filename}"
+                # Upload the file and get the response
+                uploaded_url = await storage.upload(file, unique_filename)
 
-            except Exception as e:raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,detail=f"Upload failed: {str(e)}")
+                # Generate the correct public URL using the full path from Supabase
+                attachment_url = f"{uploaded_url}"
 
-        new_post = Post(user_id=result,title=title,description=description,attachment=attachment_url)
+                # Print for debugging
+                print(f"Uploaded File URL: {attachment_url}")
+
+            except Exception as e:
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Upload failed: {str(e)}")
+
+        new_post = Post(user_id=result, title=title, description=description, attachment=attachment_url)
 
         db.add(new_post)
         await db.commit()
