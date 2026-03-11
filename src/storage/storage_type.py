@@ -1,10 +1,17 @@
 import os
 from abc import ABC, abstractmethod
-from fastapi import Depends
+from fastapi import Depends, FastAPI
+from fastapi.staticfiles import StaticFiles
 from typing import Annotated
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# Initialize FastAPI app and static file serving
+app = FastAPI()
+
+# Mount the "uploads" directory to serve as static files under "/media"
+app.mount("/media", StaticFiles(directory="uploads"), name="media")
 
 
 class StorageProvider(ABC):
@@ -36,8 +43,9 @@ class LocalStorage(StorageProvider):
         return filename
 
     def get_url(self, path: str) -> str:
-        base = os.getenv("BASE_URL", "http://localhost:8000")
-        return f"{base}/static/{path}"
+        # Use ATTACHMENT_URL from environment variable, fallback to default if not set
+        attachment_url = os.getenv("ATTACHMENT_URL", "https://dialektika-backend.onrender.com/media")
+        return f"{attachment_url}/{path}"
 
     async def delete(self, filename: str):
         path = os.path.join(self.upload_dir, filename)
@@ -47,6 +55,7 @@ class LocalStorage(StorageProvider):
 
 
 def get_storage() -> StorageProvider:
+    # Get storage type from environment variable, default to LOCAL
     storage_type = os.getenv("STORAGE_TYPE", "LOCAL")
 
     if storage_type == "LOCAL":
