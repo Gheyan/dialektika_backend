@@ -5,6 +5,7 @@ from database.database import AsyncSessionLocal
 from database.models import Post, User
 from storage.storage_type import SUPABASE_BUCKET, SUPABASE_URL, StorageDep
 from config import ATTACHMENT_URL
+import urllib.parse
 
 async def get_all_post(current_user:User, rows:int, offset:int):
     async with AsyncSessionLocal() as db:
@@ -74,41 +75,56 @@ async def edit_post(
     attachment_url = None
 
     async with AsyncSessionLocal() as db:
+        # Fetch current user's ID to ensure ownership
         current_user_query = select(User.id).where(User.email == current_user.email)
         user_id = (await db.execute(current_user_query)).scalar_one_or_none()
 
         if user_id is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="User not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
+        # Fetch the post to edit
         post_query = select(Post).where(Post.id == post_id)
         post = (await db.execute(post_query)).scalar_one_or_none()
 
         if post is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Post not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
 
+        # Check if the current user owns the post
         if post.user_id != user_id:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="You are not allowed to edit this post")
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not allowed to edit this post")
 
+        # Update title and description if provided
         if title is not None:
             post.title = title
 
         if description is not None:
             post.description = description
 
+        # Handle file upload if a file is provided
         if file:
             try:
+                # Generate a unique filename for the file
                 unique_filename = f"{uuid.uuid4()}_{file.filename}"
-                await storage.upload(file, unique_filename)
-                attachment_url = f"{ATTACHMENT_URL}/{unique_filename}"
-                post.attachment = attachment_url
+
+                # Upload the file using the storage provider
+                uploaded_url = await storage.upload(file, unique_filename)
+
+                # Update the attachment URL
+                attachment_url = uploaded_url  # The upload method already returns the public URL
+                post.attachment = attachment_url  # Save the new URL in the post's attachment field
+
+                # Debugging: Print the uploaded file URL
+                print(f"Uploaded File URL: {attachment_url}")
+
             except Exception as e:
-                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,detail=f"Upload failed: {str(e)}")
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Upload failed: {str(e)}")
 
+        # Commit changes to the database
         await db.commit()
-        await db.refresh(post)
+        await db.refresh(post)  # Refresh the post to reflect the changes
 
-        return post
-
+        return post  # Return the updated post
+    
 async def delete_post(post_id: int, current_user: User):
     async with AsyncSessionLocal() as db:
         current_user_query = select(User.id).where(User.email == current_user.email)
