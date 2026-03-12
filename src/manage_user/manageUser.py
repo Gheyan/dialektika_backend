@@ -101,7 +101,7 @@ async def edit_user(current_user: User, user_id: int, email: str=None, role: str
         if role:
             user_to_edit.role = role.lower()
         if username:
-            user_to_edit.username = "@" + username.lower()
+            user_to_edit.username = username.lower()
         if password:
             user_to_edit.hash = get_password_hash(password)
 
@@ -131,6 +131,6 @@ async def add_user(current_user: User, email: str, role: str, username: str, fir
         if username_scalar:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already exists")
         
-        new_user = User(email=email.lower(),role=role.lower(), username= "@" + username.lower(), firstname=firstname.lower(), lastname=lastname.lower(), hash=get_password_hash(password))
+        new_user = User(email=email.lower(),role=role.lower(), username = username.lower(), firstname=firstname.lower(), lastname=lastname.lower(), hash=get_password_hash(password))
         db.add(new_user)
         await db.commit()
